@@ -106,19 +106,9 @@
       }
     }
 
-    // Event binding to trigger startCooldown on IFTTT event
+    // Log page load for IFTTT event debugging
     document.addEventListener('DOMContentLoaded', () => {
       console.log('Page loaded, waiting for feed trigger from IFTTT');
-      
-      // Optional: Call startCooldown to simulate on page load for testing
-      // startCooldown();
-
-      // For production, you could bind this to an IFTTT Webhook or chat event instead
-      // Here’s an example binding for manual testing:
-      setInterval(() => {
-        console.log('Simulating IFTTT trigger'); // Log simulated trigger
-        startCooldown(); // Manually trigger the cooldown every 15 seconds for testing
-      }, 15000);
     });
   </script>
 </body>
