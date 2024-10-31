@@ -13,51 +13,101 @@
       border-radius: 15px;
       overflow: hidden;
       background: #555;
+      position: relative;
     }
     #progress-bar {
       height: 100%;
-      width: 0%;
-      background: #FFD700;
+      width: 100%; /* Start full */
+      background: green;
       transition: width 0.3s;
+    }
+    #progress-bar-text {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    /* Flash and shake animation for early triggers */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+    }
+    .shake {
+      animation: shake 0.5s;
+    }
+    .flash-red {
+      background: red !important;
     }
   </style>
 </head>
 <body>
   <div id="progress-container">
     <div id="progress-bar"></div>
+    <div id="progress-bar-text">/feed</div>
   </div>
 
   <script>
     const progressBar = document.getElementById('progress-bar');
+    const progressBarText = document.getElementById('progress-bar-text');
+    let isCoolingDown = false;
 
-    // Function to request cooldown data from the serverless function
-    async function checkCooldown() {
+    // Function to start cooldown
+    async function startCooldown() {
+      if (isCoolingDown) {
+        // Shake and flash red if cooldown is active
+        progressBar.classList.add('shake', 'flash-red');
+        setTimeout(() => {
+          progressBar.classList.remove('shake', 'flash-red');
+        }, 500);
+        return;
+      }
+
       try {
-        const response = await fetch('/api/feed');
+        // Fetch cooldown time from the API
+        const response = await fetch('/api/feed', { method: 'POST' });
         const data = await response.json();
         const cooldownTime = data.cooldown;
 
-        // Reset progress bar and animate based on cooldown time
-        progressBar.style.width = '100%';
+        // Begin cooldown animation
+        isCoolingDown = true;
+        progressBar.style.width = '0%';
+        progressBarText.innerText = '';
         let start = null;
 
         function animate(timestamp) {
           if (!start) start = timestamp;
-          const progress = 1 - (timestamp - start) / cooldownTime;
-          progressBar.style.width = Math.max(0, progress * 100) + '%';
+          const progress = (timestamp - start) / cooldownTime;
+          progressBar.style.width = Math.min(progress * 100, 100) + '%';
 
-          if (progress > 0) {
+          if (progress < 1) {
             requestAnimationFrame(animate);
+          } else {
+            // Cooldown complete
+            progressBar.style.width = '100%';
+            progressBarText.innerText = '/feed';
+            isCoolingDown = false;
           }
         }
+
         requestAnimationFrame(animate);
       } catch (error) {
-        console.error('Error fetching cooldown:', error);
+        console.error('Error starting cooldown:', error);
       }
     }
 
-    // Call function every 10 seconds for testing purposes
-    setInterval(checkCooldown, 10000);
+    // Trigger cooldown on IFTTT /feed command
+    // Optional: Replace the following line with an event trigger from your game or chat
+    document.addEventListener('DOMContentLoaded', () => {
+      setInterval(startCooldown, 15000); // Trigger cooldown every 15s for testing, remove for live
+    });
   </script>
 </body>
 </html>
