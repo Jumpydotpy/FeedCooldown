@@ -62,7 +62,7 @@
     // Function to start cooldown
     async function startCooldown() {
       if (isCoolingDown) {
-        // Shake and flash red if cooldown is active
+        console.log('Cooldown already active'); // Log when cooldown is already running
         progressBar.classList.add('shake', 'flash-red');
         setTimeout(() => {
           progressBar.classList.remove('shake', 'flash-red');
@@ -71,10 +71,13 @@
       }
 
       try {
-        // Fetch cooldown time from the API
-        const response =  await fetch('https://feed-cooldown.vercel.app/api/feed', { method: 'POST' });
+        console.log('Attempting to fetch cooldown from API'); // Log API call attempt
+        const response = await fetch('https://feed-cooldown.vercel.app/api/feed', { method: 'POST' });
+        if (!response.ok) throw new Error(`Network response was not ok, status: ${response.status}`);
+
         const data = await response.json();
         const cooldownTime = data.cooldown;
+        console.log('Cooldown time received:', cooldownTime); // Log the received cooldown time
 
         // Begin cooldown animation
         isCoolingDown = true;
@@ -90,22 +93,32 @@
           if (progress < 1) {
             requestAnimationFrame(animate);
           } else {
-            // Cooldown complete
             progressBar.style.width = '100%';
             progressBarText.innerText = '/feed';
             isCoolingDown = false;
+            console.log('Cooldown complete, bar refilled');
           }
         }
 
         requestAnimationFrame(animate);
       } catch (error) {
-        console.error('Error starting cooldown:', error);
+        console.error('Error in startCooldown:', error); // Log if there is an error with the fetch call
       }
     }
 
-    // Trigger cooldown on IFTTT /feed command
-    // Optional: Replace the following line with an event trigger from your game or chat
+    // Event binding to trigger startCooldown on IFTTT event
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('Page loaded, waiting for feed trigger from IFTTT');
+      
+      // Optional: Call startCooldown to simulate on page load for testing
+      // startCooldown();
+
+      // For production, you could bind this to an IFTTT Webhook or chat event instead
+      // Here’s an example binding for manual testing:
+      setInterval(() => {
+        console.log('Simulating IFTTT trigger'); // Log simulated trigger
+        startCooldown(); // Manually trigger the cooldown every 15 seconds for testing
+      }, 15000);
     });
   </script>
 </body>
