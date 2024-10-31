@@ -72,7 +72,7 @@
 
       try {
         // Fetch cooldown time from the API
-        const response =  await fetch('https://feed-cooldown.vercel.app//api/feed', { method: 'POST' });
+        const response =  await fetch('https://feed-cooldown.vercel.app/api/feed', { method: 'POST' });
         const data = await response.json();
         const cooldownTime = data.cooldown;
 
